@@ -1,0 +1,85 @@
+public class Environment {
+	int[] deck = { 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5,
+         		 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10
+				 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 };
+	String[] actions = {"hit" , "stick"};
+	int[] playerHand = new int[3];
+	int[] dealerHand = new int[2];     
+	
+	
+	public Environment() {};
+	
+	public String[] getActions() {
+		return actions;
+	}
+	
+	public int getReward(String action) {
+		if (action == "stick") {
+			// might want ace to be 11 here
+			dealerTurn();
+		}
+		else {
+			if (playerHand[1] > 21) {                                                                // return -1 for a bust
+				return -1;
+			}
+			else if (playerHand[1] == 21 || playerHand[1] == 11 && playerHand[3] == 1) {             // return 1.5 for blackjack
+				return 1.5;
+			}
+			else {                                                                                   // there's no winner yet, return 0
+				return 0;                                                                            
+			}
+		}
+	}
+	
+	public int dealCard(int player) {
+		int card = -1;
+		int index = 0;
+		
+		// get random card from deck
+		while (card != -1) {
+			index = new Random().nextInt(deck.length);
+			card = deck[index];
+		}
+		
+		// check if card delt was an ace
+		if (deck[index] == 1) {                     
+			if ( player = 1 ) {		
+				dealerHand[2] = 1;                  
+			}
+			else {
+				playerHand[3] = 1;
+			}
+		}
+		
+		playerHand[1] += deck[index];
+		deck[index] = -1;
+		return card;
+	}
+	
+	public int dealerTurn() {
+		
+		while ( dealerHand[1] <= 21 ) {
+			if (dealerHand[1] > playerHand[1]) {
+				return -1;
+			}
+			else if (dealerHand[2] == 1) {
+				if (dealerHand[1]+10 > playerHand[1]) {
+					return -1;
+				}
+			}
+			dealerHand[1] += dealCard(1);
+		}
+		return 1;
+		
+		shuffleDeck();
+	}
+	
+	public void shuffleDeck() {
+		deck = { 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5,
+         		 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10
+				 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 };
+		int[] playerHand = new int[3];
+		int[] dealerHand = new int[3];
+	}
+	
+}
