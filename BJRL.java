@@ -24,8 +24,8 @@ public class BJRL {
 		env = new Environment();
 		actions = env.getActions();
 		EPSILON = 0.1;
-		GAMMA = 0.9;
-		ALPHA = 0.1;
+		GAMMA = 0.5;
+		ALPHA = 0.6;
 		
 		startNewHand();
 		
@@ -69,7 +69,8 @@ public class BJRL {
 		int action = selectActionFromPolicy(state);
 		int[] nextState = getNextState(state[0], state[1], state[2], action);
 		double reward = env.getReward(nextState[0], nextState[1], nextState[2], action);
-		// 3. update value and coresponding policy of action taken
+		GUI.gameArea.append(reward+"\n");
+		GUI.gameArea.append("\n");
 		updateValue(state, action, reward, nextState);
 		updatePolicy(state);
 		state = nextState;	
@@ -89,9 +90,9 @@ public class BJRL {
 		for (int a=0; a<actions.length; a++)
 		{
 			if (nextState[0] <= 21)
-			{
-				if (Q[nextState[0]][nextState[1]][nextState[2]][a] >= maxAnextState) { maxAnextState = Q[nextState[0]][nextState[1]][nextState[2]][a]; }
-			}	
+				{
+					if (Q[nextState[0]][nextState[1]][nextState[2]][a] >= maxAnextState) { maxAnextState = Q[nextState[0]][nextState[1]][nextState[2]][a]; }
+				}	
 			}        
 		
 		Q[state[0]][state[1]][state[2]][action] = Q[state[0]][state[1]][state[2]][action] + ALPHA*(reward + GAMMA * maxAnextState - Q[state[0]][state[1]][state[2]][action]);
@@ -99,12 +100,12 @@ public class BJRL {
 	}
 	
 	public void updatePolicy(int[] state) {
-		double maxActionValue = -999999999;
+		double maxActionValue = 999999999;
 		ArrayList<Integer> maxActions = new ArrayList<Integer>();
 
 		for (int i=0; i<actions.length; i++) 
 		{
-			if (Q[state[0]][state[1]][state[2]][i] >  maxActionValue)
+			if (Q[state[0]][state[1]][state[2]][i] <  maxActionValue)
 			{
 				maxActionValue = Q[state[0]][state[1]][state[2]][i];
 				maxActions.add(i);
@@ -170,24 +171,19 @@ public class BJRL {
 	}
 	
 	public void OutputPolicyAndValues() {
+
 		for (int s = 0; s < 21; s++) {
 			for (int d = 0; d < 11; d++) {
 				for (int a = 0; a < 2; a++) {
 					for (int i = 0; i < env.actions.length; i++) {
-						GUI.gameArea.append(Double.toString(Q[s][d][a][i]) + " ");
+						GUI.gameArea.append("Policy: " + "\n");
+						GUI.gameArea.append("Card value: " + s + " Dealer up card: " + d + "Soft ace: " + a + "\n");
+						GUI.gameArea.append("Action: " + i + " Policy:" + Double.toString(P[s][d][a][i]));
+						GUI.gameArea.append("\n");
+						GUI.gameArea.append("\n");
+						GUI.gameArea.append("\n");
+						
 					}
-				}
-				GUI.gameArea.append("\n");
-			}
-		}
-		
-		for (int s = 0; s < 21; s++) {
-			for (int d = 0; d < 11; d++) {
-				for (int a = 0; a < 2; a++) {
-					for (int i = 0; i < env.actions.length; i++) {
-						GUI.gameArea.append(Double.toString(P[s][d][a][i]) + " ");
-					}
-					GUI.gameArea.append("\n");
 				}
 			}
 		}
