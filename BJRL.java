@@ -17,8 +17,8 @@ public class BJRL {
 	
 	public BJRL() {
 		
-		Q = new double[22][11][2][2];   
-		P = new double[22][11][2][2];
+		Q = new double[32][11][2][2];   
+		P = new double[32][11][2][2];
 		state = new int[3];
 		dealerState = new int[2];
 		env = new Environment();
@@ -30,7 +30,7 @@ public class BJRL {
 		startNewHand();
 		
 		// Initialize policy and values
-		for (int s = 0; s < 21; s++) {
+		for (int s = 0; s < 31; s++) {
 			for (int d = 0; d < 11; d++) {
 				for (int a = 0; a < 2; a++) {
 					for (int i = 0; i < env.actions.length; i++) {
@@ -60,6 +60,7 @@ public class BJRL {
 		dealerState = card;
 		state[1] = dealerState[0];
 		
+		
 	}
 	
 	public void QLearningIteration() {
@@ -69,12 +70,12 @@ public class BJRL {
 		int action = selectActionFromPolicy(state);
 		int[] nextState = getNextState(state[0], state[1], state[2], action);
 		double reward = env.getReward(nextState[0], nextState[1], nextState[2], action);
-		GUI.gameArea.append(reward+"\n");
-		GUI.gameArea.append("\n");
-		updateValue(state, action, reward, nextState);
-		updatePolicy(state);
-		state = nextState;	
+		updateValue(nextState, action, reward);
+		updatePolicy();
 		
+		OutputState(action, reward);
+		
+		state = nextState;	
 		if (actions[action] == "Stick" || state[0] >= 21) {
 			env = new Environment();
 			startNewHand();
@@ -84,30 +85,29 @@ public class BJRL {
 		
 	}
 	
-	public void updateValue(int[] state, int action, double reward, int[]nextState) {
+	public void updateValue(int[] nextState, int action, double reward) {
 		
-		double maxAnextState = -99999999;
+		double maxAnextState = -999999999;
 		for (int a=0; a<actions.length; a++)
 		{
-			if (nextState[0] <= 21)
-				{
-					if (Q[nextState[0]][nextState[1]][nextState[2]][a] >= maxAnextState) { maxAnextState = Q[nextState[0]][nextState[1]][nextState[2]][a]; }
-				}	
-			}        
+			if (Q[nextState[0]][nextState[1]][nextState[2]][a] >= maxAnextState) { maxAnextState = Q[nextState[0]][nextState[1]][nextState[2]][a]; }
+					
+		}        
 		
 		Q[state[0]][state[1]][state[2]][action] = Q[state[0]][state[1]][state[2]][action] + ALPHA*(reward + GAMMA * maxAnextState - Q[state[0]][state[1]][state[2]][action]);
     		
 	}
 	
-	public void updatePolicy(int[] state) {
-		double maxActionValue = 999999999;
+	public void updatePolicy() {
+		double maxActionValue = -999999999;
 		ArrayList<Integer> maxActions = new ArrayList<Integer>();
 
 		for (int i=0; i<actions.length; i++) 
 		{
-			if (Q[state[0]][state[1]][state[2]][i] <  maxActionValue)
+			if (Q[state[0]][state[1]][state[2]][i] >  maxActionValue)
 			{
 				maxActionValue = Q[state[0]][state[1]][state[2]][i];
+				maxActions.clear();
 				maxActions.add(i);
 			}
 			else if (Q[state[0]][state[1]][state[2]][i] ==  maxActionValue) 
@@ -122,6 +122,7 @@ public class BJRL {
 			else       			        { P[state[0]][state[1]][state[2]][i] = 0; }
 			
 		}
+		
 	}
 	
 	public int selectActionFromPolicy(int[] state) {
@@ -170,7 +171,15 @@ public class BJRL {
 		return nextState;
 	}
 	
-	public void OutputPolicyAndValues() {
+	public void OutputState(int a, double r) {
+		
+		GUI.gameArea.append("Player's Hand: " + "[" + state[0] + "]" + "\n");
+		GUI.gameArea.append("Dealer's Top Card: " + "[" + state[1] + "]" + "\n");
+		GUI.gameArea.append("Action: " + actions[a] + "\n" + "Reward: " + r + "\n\n");
+	
+	}
+	
+	public void OutputPolicy() {
 
 		for (int s = 0; s < 21; s++) {
 			for (int d = 0; d < 11; d++) {
@@ -178,7 +187,7 @@ public class BJRL {
 					for (int i = 0; i < env.actions.length; i++) {
 						GUI.gameArea.append("Policy: " + "\n");
 						GUI.gameArea.append("Card value: " + s + " Dealer up card: " + d + "Soft ace: " + a + "\n");
-						GUI.gameArea.append("Action: " + i + " Policy:" + Double.toString(P[s][d][a][i]));
+						GUI.gameArea.append("Action: " + i + " Policy:" + Double.toString(P[s][d][a][i]) + " Value:" + Double.toString(Q[s][d][a][i]));
 						GUI.gameArea.append("\n");
 						GUI.gameArea.append("\n");
 						GUI.gameArea.append("\n");

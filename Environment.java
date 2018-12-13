@@ -40,6 +40,7 @@ public class Environment {
 		}
 
 	public double getReward(int cardValue, int dTopCard, int soft, int action) {
+	
 		if (actions[action] == "Stick") {
 			if (soft > 0) {
 				if (cardValue + 10 > cardValue && cardValue + 10 <= 21) {
@@ -48,7 +49,7 @@ public class Environment {
 			}
 			return dealerTurn(cardValue, dTopCard);
 		}
-		else if (cardValue > 21) {                                                              
+		else if (cardValue > 21) {     
 			return -1.0;
 		}
 		else if (cardValue == 21 || cardValue == 11 && soft > 1) {             
@@ -67,7 +68,7 @@ public class Environment {
 			dealerAce += 1;
 		}
 		
-		while ( dealerValue <= cV ) {
+		while ( dealerValue <= 17 ) {
 			// Deal the dealer one card
 			int[] newCard = dealCard();
 			dealerValue += newCard[0];
@@ -77,6 +78,7 @@ public class Environment {
 			// Check for win or lose.
 			if (dealerValue > 21) {
 				return 1.0;
+
 			}
 			else if (dealerValue > cV) {
 				return -1.0;
@@ -84,14 +86,9 @@ public class Environment {
 			else if (dealerAce == 1 && dealerValue + 10 > cV) {
 				return -1.0;
 			}
-			else if (dealerValue == cV) {
-				return 0;
-			}
-			else if (dealerAce == 1 && dealerValue + 10 == cV) {
-				return 0;
-			}
+		
 		}
-		return 0;
+		return 1;
 	}
 
 	public Environment shuffleDeck() {

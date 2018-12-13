@@ -1,13 +1,3 @@
-// buttons:
-//  single q iteration
-//  constant q iteration
-//  output current P & Q
-//  output optimal P & Q
-//  reset q learning ( reset P & Q )  (start new game)
-// + text fields for variables
-
-
-
 package blackjackRL;
 
 import java.awt.FlowLayout;
@@ -20,11 +10,11 @@ public class GUI extends JFrame {
 	private JButton startGame;
 	private JButton singleIteration;
 	private JButton toggleIteration;
-	private JButton outputPolicyAndValue;
+	private JButton outputPolicy;
 	private JScrollPane sp;
 	public static JTextArea gameArea;
 
-	public static final int FRAME_WIDTH = 400;
+	public static final int FRAME_WIDTH = 1000;
 	public static final int FRAME_HEIGHT = 400;
 	
 	public static BJRL qLearn;
@@ -40,16 +30,15 @@ public class GUI extends JFrame {
 		    	startNewGame();
 		    }
 		});
-		outputPolicyAndValue = new JButton("Output Current Policy");
-		outputPolicyAndValue.addActionListener(new ActionListener() {
+		outputPolicy = new JButton("Output Current Policy");
+		outputPolicy.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent e) {	
-		    	qLearn.OutputPolicyAndValues();
+		    	qLearn.OutputPolicy();
 		    }
 		});
 		toggleIteration = new JButton("Toggle Iteration");
 		toggleIteration.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent e) {
-				// this may not be a good way to do this
 		    	learningInProgress = !learningInProgress;
 		    }
 		});
@@ -69,7 +58,7 @@ public class GUI extends JFrame {
 		JPanel Panel = new JPanel();
 		Panel.setLayout(new FlowLayout());
 		Panel.add(toggleIteration);
-		Panel.add(outputPolicyAndValue);
+		Panel.add(outputPolicy);
 		Panel.add(singleIteration);
 		Panel.add(startGame);
 		Panel.add(sp);
@@ -92,12 +81,10 @@ public class GUI extends JFrame {
 		mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		mainFrame.setVisible(true);
 		
-		
-		// THIS DOESNT WORK 
 		//while(mainFrame.components != null) {
-			//if (learningInProgress) {
-			//	qLearn.QLearningIteration();
-			//}
+			if (learningInProgress) {
+				qLearn.QLearningIteration();
+			}
 		
 		
 	}
