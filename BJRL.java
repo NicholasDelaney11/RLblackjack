@@ -1,38 +1,35 @@
 package blackjackRL;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 public class BJRL {
 
 	private double[][][][] P;                 // = [card value][dealers top card][softace?][action]
 	private double[][][][] Q;
-	
-	private int[] state;                     // = [card total, dealer's top card, soft ace?]        
+	private int[] state;                     // = [card total, dealer's top card, count of aces]        
 	private int[] dealerState;               // = [card total, soft ace?]
 	private Environment env;
+	private String[] actions;
 	private final double EPSILON;
+	private final double GAMMA;
+	private final double ALPHA;
 	
 	public BJRL() {
+		
+		Q = new double[22][11][2][2];   
+		P = new double[22][11][2][2];
 		state = new int[3];
-		dealerState = new int[3];
+		dealerState = new int[2];
 		env = new Environment();
-		Q = new double[21][11][2][2];   // card value
-		P = new double[21][11][2][2];
+		actions = env.getActions();
 		EPSILON = 0.1;
+		GAMMA = 0.9;
+		ALPHA = 0.1;
 		
-		// deal player 2 cards and deal dealer 1 card (start new hand)
-		// int[] card = Environment.dealCard();
-		// state[0] = card[0];
-		// state[2] = card[1];
-		// card = Environment.dealCard();
-		// dealerState = card;
-		// state[1] = dealerState[0];
+		startNewHand();
 		
-		
-		// P&Q = [32 x 10]
-		// no split action added yet
-		// initialize all P to 1/2
-		// initialize all Q to 0
+		// Initialize policy and values
 		for (int s = 0; s < 21; s++) {
 			for (int d = 0; d < 11; d++) {
 				for (int a = 0; a < 2; a++) {
@@ -47,22 +44,83 @@ public class BJRL {
 		
 	}
 	
+	public void startNewHand() {
+		// deal player 2 cards
+		int[] card = env.dealCard();
+		state[0] = card[0];
+		state[2] = card[1];
+		card = env.dealCard();
+		state[0] += card[0];
+		if (state[2] == 0 && card[1] == 1) {
+			state[2] = 1;
+		}
+	
+		// show the dealer's top card
+		card = env.dealCard();
+		dealerState = card;
+		state[1] = dealerState[0];
+		
+	}
 	
 	public void QLearningIteration() {
 		
+		for (int i = 0; i < 1000; i++) {
 		
 		int action = selectActionFromPolicy(state);
-		GUI.gameArea.append(action+"");
-		//double reward = Environment.getReward(state[0], state[1], state[2], action);
+		int[] nextState = getNextState(state[0], state[1], state[2], action);
+		double reward = env.getReward(nextState[0], nextState[1], nextState[2], action);
+		// 3. update value and coresponding policy of action taken
+		updateValue(state, action, reward, nextState);
+		updatePolicy(state);
+		state = nextState;	
 		
- 
-		// 2. take action, get reward and get next state
-		   // don't update state here!! need both states for update!
-		// 3. update policy and value
-		// 4. state = next state
-		// 5. "shuffle deck" if state is terminal
-		// test each numbered step and environment functions as you go
+		if (actions[action] == "Stick" || state[0] >= 21) {
+			env = new Environment();
+			startNewHand();
+		}
 		
+		}
+		
+	}
+	
+	public void updateValue(int[] state, int action, double reward, int[]nextState) {
+		
+		double maxAnextState = -99999999;
+		for (int a=0; a<actions.length; a++)
+		{
+			if (nextState[0] <= 21)
+			{
+				if (Q[nextState[0]][nextState[1]][nextState[2]][a] >= maxAnextState) { maxAnextState = Q[nextState[0]][nextState[1]][nextState[2]][a]; }
+			}	
+			}        
+		
+		Q[state[0]][state[1]][state[2]][action] = Q[state[0]][state[1]][state[2]][action] + ALPHA*(reward + GAMMA * maxAnextState - Q[state[0]][state[1]][state[2]][action]);
+    		
+	}
+	
+	public void updatePolicy(int[] state) {
+		double maxActionValue = -999999999;
+		ArrayList<Integer> maxActions = new ArrayList<Integer>();
+
+		for (int i=0; i<actions.length; i++) 
+		{
+			if (Q[state[0]][state[1]][state[2]][i] >  maxActionValue)
+			{
+				maxActionValue = Q[state[0]][state[1]][state[2]][i];
+				maxActions.add(i);
+			}
+			else if (Q[state[0]][state[1]][state[2]][i] ==  maxActionValue) 
+			{
+				maxActions.add(i);
+			}
+		}
+		
+		for (int i=0; i<actions.length; i++)
+		{
+			if (maxActions.contains(i)) { P[state[0]][state[1]][state[2]][i] = 1.0/maxActions.size(); }
+			else       			        { P[state[0]][state[1]][state[2]][i] = 0; }
+			
+		}
 	}
 	
 	public int selectActionFromPolicy(int[] state) {
@@ -83,6 +141,32 @@ public class BJRL {
 			
 		}
 		return -1;                        // an error has occured 
+	}
+	
+	public int[] getNextState(int cardValue, int dTopCard, int softAce, int action) {
+		String[] actions = env.getActions();
+		int[] nextState = new int[3];
+		nextState[1] = dTopCard;
+		
+		// Deal new card
+		if (actions[action] == "Hit") {
+			int[] newCard = env.dealCard();
+			nextState[0] = cardValue + newCard[0];
+			if (softAce == 0 && newCard[1] == 1) {
+				nextState[2] = 1;
+			}
+			else if (softAce > 1 && newCard[1] == 1) {
+				nextState[2] += 1;
+			}
+			else {
+				nextState[2] = 0;
+			}
+		}
+		else if (actions[action] == "Stick") {
+			nextState[0] = cardValue;
+			nextState[2] = softAce;
+		}
+		return nextState;
 	}
 	
 	public void OutputPolicyAndValues() {
@@ -110,23 +194,3 @@ public class BJRL {
 	}
 	 
 }
-/*
-Initialize Q(s, a) arbitrarily
-Repeat (for each episode):
-Choose a from s using policy derived from Q
-Take action a, observe r, and s'
-Q(s, a) ⇐ Q(s, a) +  [r +  maxa' Q(s', a') ­ Q(s, a)]
-s ⇐ s'
-until s is terminal
-Figure 1: The Q­learning algorithm
-
-1. 6 decks (5 in play, and 1 as a buffer)
-2. Dealer stands on soft 17
-3. Double down allowed after splitting
-4. No limit on the number of re-splits
-5. Insurance is not offered
-6. No surrender
-7. Natural blackjack pays 3:2
-
-
-*/
